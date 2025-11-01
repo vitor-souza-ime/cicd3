@@ -1,0 +1,47 @@
+name: CI/CD SAST + DAST com Javalin
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-test-sast-dast:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pega o código do repositório
+      - uses: actions/checkout@v3
+
+      # 2. Configura JDK 17
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Build e testes unitários
+      - name: Build e testes unitários
+        run: mvn clean verify
+
+      # 4. SAST - SonarQube
+      - name: SAST - SonarQube
+        env:
+          SONAR_HOST: ${{ secrets.SONAR_HOST }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=MiniSecurityProject \
+            -Dsonar.host.url=$SONAR_HOST \
+            -Dsonar.login=$SONAR_TOKEN
+
+      # 5. Inicia aplicação Javalin em background
+      - name: Iniciar aplicação
+        run: nohup mvn exec:java -Dexec.mainClass="com.exemplo.App" &
+
+      # 6. DAST - OWASP ZAP
+      - name: DAST - OWASP ZAP
+        run: |
+          docker run -u zap -i owasp/zap2docker-stable zap-baseline.py \
+            -t http://localhost:8080

@@ -5,10 +5,10 @@ import io.javalin.Javalin;
 public class Main {
 
     public static void main(String[] args) {
-        // Cria e inicia o servidor na porta 8080
+        // Inicia servidor Javalin na porta 8080
         Javalin app = Javalin.create().start(8080);
 
-        // Rota principal, retorna HTML
+        // Rota principal
         app.get("/", ctx -> ctx.html("<h1>Aplicação de Teste com Javalin</h1>"));
 
         System.out.println("Servidor rodando em http://localhost:8080");
